@@ -670,7 +670,6 @@ Self-taught builder who went from a slow internet connection in India to foundin
 
 - **[TinyCheque](https://tinycheque.com)** — India's first agentic AI venture studio, building [seoengine.ai](https://seoengine.ai), [autoposting.ai](https://autoposting.ai), [niyam.ai](https://niyam.ai), and [qcall.ai](https://qcall.ai)
 - **[Firstsales.io](https://firstsales.io)** — Sales automation platform
-- **[PitchGround](https://pitchground.com)** — Bootstrapped to $25m+ GMV, helped 700+ SaaS companies launch and grow without external funding
 
 ### Angel Investing
 

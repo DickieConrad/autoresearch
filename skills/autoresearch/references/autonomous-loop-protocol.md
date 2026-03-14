@@ -158,9 +158,10 @@ Applies to both modes:
 1. Re-read ALL in-scope files from scratch
 2. Re-read the original goal/direction
 3. Review entire results log for patterns
-4. Try combining 2-3 previously successful changes
-5. Try the OPPOSITE of what hasn't been working
-6. Try a radical architectural change
+4. If spec exists, re-read `autoresearch-spec.md` — discards may be caused by spec violations rather than metric regressions. Check if the spec is too strict or if your approach needs to change to satisfy both metric and spec
+5. Try combining 2-3 previously successful changes
+6. Try the OPPOSITE of what hasn't been working
+7. Try a radical architectural change
 
 ## Crash Recovery
 

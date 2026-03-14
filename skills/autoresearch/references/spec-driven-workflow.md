@@ -2,6 +2,8 @@
 
 Generate a behavioral specification before running the autonomous loop. The spec acts as a **second verification gate** — changes must improve the metric AND satisfy the spec.
 
+**Related:** This workflow integrates with the autonomous loop defined in `references/autonomous-loop-protocol.md` (Phases 5-7).
+
 ## Why Specs Matter
 
 Metrics tell you if things got *numerically* better. Specs tell you if things still *behave correctly*.

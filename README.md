@@ -1255,7 +1255,7 @@ A metric alone can be gamed. A spec defines invariants, behaviors, and constrain
 
 ---
 
-## 8 Critical Rules
+## 9 Critical Rules
 
 These rules govern Claude's behavior during the autonomous loop:
 
@@ -1269,6 +1269,7 @@ These rules govern Claude's behavior during the autonomous loop:
 | 6 | **Simplicity wins** | Equal results + less code = KEEP. Tiny gain + ugly complexity = DISCARD. |
 | 7 | **Git is memory** | Every kept change committed. Agent reads history to learn patterns. |
 | 8 | **When stuck, think harder** | Re-read files, combine near-misses, try radical changes. |
+| 9 | **Respect the spec** | If a spec exists, every kept change must pass spec validation. Metric gaming = discard. |
 
 ---
 

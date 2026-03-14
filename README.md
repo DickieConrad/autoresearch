@@ -1161,6 +1161,21 @@ Goal: Phase 1 — all tests pass. Phase 2 — coverage >80%. Phase 3 — zero li
 Advance to next phase only when current is stable for 3 consecutive iterations.
 ```
 
+### Pattern 8: "Spec-Guarded Optimization"
+
+Optimize aggressively while a spec prevents metric gaming.
+
+```
+/autoresearch:spec
+# Generates invariants (tests pass, lint clean), behaviors (API contracts), constraints (no new deps)
+
+/autoresearch
+Goal: Reduce API response time under 100ms (p95)
+Spec: autoresearch-spec.md
+```
+
+The loop chases speed but can't sacrifice correctness — spec violations auto-revert. Ideal for overnight performance optimization.
+
 ---
 
 ## Writing Verification Scripts

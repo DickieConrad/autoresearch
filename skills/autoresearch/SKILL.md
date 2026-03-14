@@ -148,9 +148,10 @@ When a loop count is specified:
    - Design: lighthouse score, accessibility audit passes
    - If no metric exists → define one with user, or use simplest proxy (e.g. "compiles without errors")
 3. **Define scope constraints** — Which files can you modify? Which are read-only?
-4. **Create a results log** — Track every iteration (see `references/results-logging.md`)
-5. **Establish baseline** — Run verification on current state. Record as iteration #0
-6. **Confirm and go** — Show user the setup, get confirmation, then BEGIN THE LOOP
+4. **Generate spec (optional)** — Run `/autoresearch:spec` to create `autoresearch-spec.md` with invariants, behaviors, and constraints. The spec acts as a second verification gate in the loop. See `references/spec-driven-workflow.md`
+5. **Create a results log** — Track every iteration (see `references/results-logging.md`)
+6. **Establish baseline** — Run verification on current state. Record as iteration #0
+7. **Confirm and go** — Show user the setup, get confirmation, then BEGIN THE LOOP
 
 ## The Loop
 

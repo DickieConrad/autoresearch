@@ -28,12 +28,13 @@ LOOP (FOREVER or N times):
   3. Make ONE focused change
   4. Git commit (before verification)
   5. Run mechanical verification (tests, benchmarks, scores)
-  6. If improved → keep. If worse → git revert. If crashed → fix or skip.
-  7. Log the result
+     + Spec validation (if autoresearch-spec.md exists)
+  6. If improved + spec OK → keep. If spec fails → revert. If worse → revert.
+  7. Log the result (with spec_status)
   8. Repeat. Default: NEVER STOP. With /loop N: stop after N iterations.
 ```
 
-Every improvement stacks. Every failure auto-reverts. Progress is logged in TSV format.
+Every improvement stacks. Every failure auto-reverts. Specs prevent metric gaming. Progress is logged in TSV format.
 
 ---
 

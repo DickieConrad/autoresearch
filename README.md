@@ -195,6 +195,110 @@ Ready-to-use:
 Launch now? → [Unlimited] [Bounded] [Copy only]
 ```
 
+### More Examples
+
+**Test Coverage (Node.js)**
+```
+> /autoresearch:plan Increase test coverage to 95%
+
+[Context]  Detected: Jest, TypeScript, 84 source files
+[Scope]    src/**/*.ts, src/**/*.test.ts (84 + 31 files)
+[Metric]   Coverage % from Jest (higher is better)
+[Verify]   npx jest --coverage --silent 2>&1 | grep "All files" | awk '{print $4}'
+[Dry run]  ✓ Exit 0 — Baseline: 72.3%
+
+  /autoresearch
+  Goal: Increase test coverage to 95%
+  Scope: src/**/*.ts, src/**/*.test.ts
+  Metric: coverage % (higher is better)
+  Verify: npx jest --coverage --silent 2>&1 | grep "All files" | awk '{print $4}'
+```
+
+**Lighthouse Performance (Next.js)**
+```
+> /autoresearch:plan Improve page load speed
+
+[Context]  Detected: Next.js, React, Tailwind, 23 components
+[Scope]    src/app/**/*.tsx, src/components/**/*.tsx (41 files)
+[Metric]   Lighthouse performance score 0-100 (higher is better)
+[Verify]   npx lighthouse http://localhost:3000 --output json --quiet | jq '.categories.performance.score * 100'
+[Dry run]  ✓ Exit 0 — Baseline: 68
+
+  /autoresearch
+  Goal: Lighthouse performance score above 90
+  Scope: src/app/**/*.tsx, src/components/**/*.tsx
+  Metric: Lighthouse performance score (higher is better)
+  Verify: npx lighthouse http://localhost:3000 --output json --quiet | jq '.categories.performance.score * 100'
+```
+
+**TypeScript Strictness**
+```
+> /autoresearch:plan Eliminate all any types
+
+[Context]  Detected: TypeScript 5.x, 147 source files
+[Scope]    src/**/*.ts, src/**/*.tsx (147 files)
+[Metric]   Count of `any` type annotations (lower is better)
+[Verify]   grep -r ":\s*any" src/ --include="*.ts" --include="*.tsx" | wc -l | tr -d ' '
+[Dry run]  ✓ Exit 0 — Baseline: 34
+
+  /autoresearch
+  Goal: Eliminate all TypeScript any types
+  Scope: src/**/*.ts, src/**/*.tsx
+  Metric: any count (lower is better)
+  Verify: grep -r ":\s*any" src/ --include="*.ts" --include="*.tsx" | wc -l | tr -d ' '
+```
+
+**Python ML Training**
+```
+> /autoresearch:plan Reduce validation loss
+
+[Context]  Detected: PyTorch, train.py, config.yaml
+[Scope]    train.py, model.py (2 files)
+[Metric]   val_bpb from training output (lower is better)
+[Verify]   uv run train.py --epochs 1 2>&1 | grep "val_bpb" | tail -1 | awk '{print $NF}'
+[Dry run]  ✓ Exit 0 — Baseline: 1.0821
+
+  /autoresearch
+  Goal: Reduce validation loss (val_bpb)
+  Scope: train.py, model.py
+  Metric: val_bpb (lower is better)
+  Verify: uv run train.py --epochs 1 2>&1 | grep "val_bpb" | tail -1 | awk '{print $NF}'
+```
+
+**Content SEO Scoring**
+```
+> /autoresearch:plan Improve blog SEO scores
+
+[Context]  Detected: Markdown blog posts, custom scoring script
+[Scope]    content/blog/*.md (12 files)
+[Metric]   Average SEO score across posts (higher is better)
+[Verify]   node scripts/seo-score.js content/blog/ | grep "average" | awk '{print $2}'
+[Dry run]  ✓ Exit 0 — Baseline: 64
+
+  /autoresearch
+  Goal: All blog posts score 80+ on SEO audit
+  Scope: content/blog/*.md
+  Metric: average SEO score (higher is better)
+  Verify: node scripts/seo-score.js content/blog/ | grep "average" | awk '{print $2}'
+```
+
+**Docker Image Size**
+```
+> /autoresearch:plan Reduce Docker image size
+
+[Context]  Detected: Dockerfile, .dockerignore, Node.js app
+[Scope]    Dockerfile, .dockerignore (2 files)
+[Metric]   Image size in MB (lower is better)
+[Verify]   docker build -t bench . -q 2>&1 && docker images bench --format "{{.Size}}" | sed 's/MB//'
+[Dry run]  ✓ Exit 0 — Baseline: 487
+
+  /autoresearch
+  Goal: Reduce Docker image size below 200MB
+  Scope: Dockerfile, .dockerignore
+  Metric: image size in MB (lower is better)
+  Verify: docker build -t bench . -q 2>&1 && docker images bench --format "{{.Size}}" | sed 's/MB//'
+```
+
 ### When to Use
 
 | Situation | Use |

@@ -117,6 +117,89 @@ Claude will:
 
 ---
 
+## Spec-Driven Development with `/autoresearch:spec` (v1.1.0)
+
+Metrics tell you if things got *numerically* better. But a metric alone can be gamed — coverage rises via trivial tests, bundle size drops by removing features, response time improves by skipping validation.
+
+`/autoresearch:spec` generates a **behavioral specification** that acts as a second verification gate. Every iteration must improve the metric AND satisfy the spec.
+
+### Spec Usage
+
+```
+/autoresearch:spec
+```
+
+This scans your codebase and generates `autoresearch-spec.md` with three sections:
+
+```markdown
+# Autoresearch Spec
+
+## Invariants
+Things that must ALWAYS be true.
+- [ ] All tests pass: `npm test`
+- [ ] No new lint errors: `npm run lint | grep -c error`
+
+## Behaviors
+Observable behaviors that must be preserved.
+- [ ] Login returns 401 for wrong password
+- [ ] Rate limiter blocks after 100 requests/min
+
+## Constraints
+Hard limits the loop must respect.
+- [ ] No new runtime dependencies
+- [ ] Bundle size stays under 500KB
+```
+
+### How It Works in the Loop
+
+When `autoresearch-spec.md` exists, the loop adds a second gate after metric verification:
+
+```
+Metric improved + spec passes  → KEEP
+Metric improved + spec fails   → DISCARD (metric gaming detected)
+Metric same/worse              → DISCARD (as before)
+```
+
+This means the loop can't game the metric at the expense of correctness.
+
+### Tiered Validation
+
+To keep iterations fast, spec checks run on a tiered schedule:
+
+| Tier | Frequency | Items | Rationale |
+|------|-----------|-------|-----------|
+| T0: Invariants | Every iteration | Tests pass, lint clean | Catch breakage immediately |
+| T1: Behaviors | Every 5th iteration | Key user-facing behaviors | Behavioral drift is slower |
+| T2: Constraints | Every 10th iteration | Dep count, bundle size | These change rarely |
+
+### Example: Test Coverage with Spec Guard
+
+Without spec — the loop might add trivial `expect(true).toBe(true)` tests to inflate coverage.
+
+With spec:
+```
+/autoresearch:spec
+# Generates spec with invariant: "no snapshot tests", constraint: "all tests assert behavior"
+
+/autoresearch
+Goal: Increase test coverage to 95%
+Spec: autoresearch-spec.md
+```
+
+Now coverage can only increase through *meaningful* tests that pass behavioral checks.
+
+### When to Use Spec
+
+| Situation | Use |
+|-----------|-----|
+| Running overnight without review | `/autoresearch:spec` first — safety net while you sleep |
+| Optimizing performance | Spec locks behavioral correctness while loop chases speed |
+| Refactoring | Spec ensures public API surface is preserved |
+| Content optimization | Spec guards factual accuracy while loop optimizes readability |
+| Any high-stakes loop | Spec = insurance against metric gaming |
+
+---
+
 ## Plan Your Run with `/autoresearch:plan` (v1.0.2)
 
 The hardest part of autoresearch isn't the loop — it's **defining Scope, Metric, and Verify** correctly. Get these wrong and the loop wastes iterations. Get them right and it's unstoppable.
@@ -317,89 +400,6 @@ Launch now? → [Unlimited] [Bounded] [Copy only]
 | Want to validate before a long run | `/autoresearch:plan` — dry-run confirms it works |
 | Know exactly what you want | `/autoresearch` directly — skip the wizard |
 | Running overnight | `/autoresearch:plan` then launch — confidence before sleep |
-
----
-
-## Spec-Driven Development with `/autoresearch:spec` (v1.1.0)
-
-Metrics tell you if things got *numerically* better. But a metric alone can be gamed — coverage rises via trivial tests, bundle size drops by removing features, response time improves by skipping validation.
-
-`/autoresearch:spec` generates a **behavioral specification** that acts as a second verification gate. Every iteration must improve the metric AND satisfy the spec.
-
-### Spec Usage
-
-```
-/autoresearch:spec
-```
-
-This scans your codebase and generates `autoresearch-spec.md` with three sections:
-
-```markdown
-# Autoresearch Spec
-
-## Invariants
-Things that must ALWAYS be true.
-- [ ] All tests pass: `npm test`
-- [ ] No new lint errors: `npm run lint | grep -c error`
-
-## Behaviors
-Observable behaviors that must be preserved.
-- [ ] Login returns 401 for wrong password
-- [ ] Rate limiter blocks after 100 requests/min
-
-## Constraints
-Hard limits the loop must respect.
-- [ ] No new runtime dependencies
-- [ ] Bundle size stays under 500KB
-```
-
-### How It Works in the Loop
-
-When `autoresearch-spec.md` exists, the loop adds a second gate after metric verification:
-
-```
-Metric improved + spec passes  → KEEP
-Metric improved + spec fails   → DISCARD (metric gaming detected)
-Metric same/worse              → DISCARD (as before)
-```
-
-This means the loop can't game the metric at the expense of correctness.
-
-### Tiered Validation
-
-To keep iterations fast, spec checks run on a tiered schedule:
-
-| Tier | Frequency | Items | Rationale |
-|------|-----------|-------|-----------|
-| T0: Invariants | Every iteration | Tests pass, lint clean | Catch breakage immediately |
-| T1: Behaviors | Every 5th iteration | Key user-facing behaviors | Behavioral drift is slower |
-| T2: Constraints | Every 10th iteration | Dep count, bundle size | These change rarely |
-
-### Example: Test Coverage with Spec Guard
-
-Without spec — the loop might add trivial `expect(true).toBe(true)` tests to inflate coverage.
-
-With spec:
-```
-/autoresearch:spec
-# Generates spec with invariant: "no snapshot tests", constraint: "all tests assert behavior"
-
-/autoresearch
-Goal: Increase test coverage to 95%
-Spec: autoresearch-spec.md
-```
-
-Now coverage can only increase through *meaningful* tests that pass behavioral checks.
-
-### When to Use Spec
-
-| Situation | Use |
-|-----------|-----|
-| Running overnight without review | `/autoresearch:spec` first — safety net while you sleep |
-| Optimizing performance | Spec locks behavioral correctness while loop chases speed |
-| Refactoring | Spec ensures public API surface is preserved |
-| Content optimization | Spec guards factual accuracy while loop optimizes readability |
-| Any high-stakes loop | Spec = insurance against metric gaming |
 
 ---
 

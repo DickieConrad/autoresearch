@@ -502,14 +502,17 @@ Each iteration follows an 8-phase protocol:
 Every iteration is logged in TSV format:
 
 ```tsv
-iteration	commit	metric	delta	status	description
-0	a1b2c3d	85.2	0.0	baseline	initial state — test coverage 85.2%
-1	b2c3d4e	87.1	+1.9	keep	add tests for auth middleware edge cases
-2	-	86.5	-0.6	discard	refactor test helpers (broke 2 tests)
-3	-	0.0	0.0	crash	add integration tests (DB connection failed)
-4	c3d4e5f	88.3	+1.2	keep	add tests for error handling in API routes
-5	d4e5f6g	89.0	+0.7	keep	add boundary value tests for validators
+iteration	commit	metric	delta	status	spec_status	description
+0	a1b2c3d	85.2	0.0	baseline	pass	initial state — test coverage 85.2%
+1	b2c3d4e	87.1	+1.9	keep	pass	add tests for auth middleware edge cases
+2	-	86.5	-0.6	discard	pass	refactor test helpers (broke 2 tests)
+3	-	0.0	0.0	crash	-	add integration tests (DB connection failed)
+4	-	89.0	+1.9	discard	FAIL:invariant:lint	add tests but introduce lint errors
+5	c3d4e5f	88.3	+1.2	keep	pass	add tests for error handling in API routes
+6	d4e5f6g	89.0	+0.7	keep	pass	add boundary value tests for validators
 ```
+
+The `spec_status` column tracks whether the behavioral spec passed or failed for each iteration. When no spec exists, the column shows `-`.
 
 Every 10 iterations, Claude prints a summary:
 

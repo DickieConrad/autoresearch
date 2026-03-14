@@ -4,6 +4,24 @@ Generate a behavioral specification before running the autonomous loop. The spec
 
 **Related:** This workflow integrates with the autonomous loop defined in `references/autonomous-loop-protocol.md` (Phases 5-7).
 
+## Quick Reference
+
+| Step | Action |
+|------|--------|
+| 1. Generate | Run `/autoresearch:spec` → scans codebase → creates `autoresearch-spec.md` |
+| 2. Review | Select which invariants, behaviors, and constraints to enforce |
+| 3. Validate | Dry-run all spec checks — all must pass before loop starts |
+| 4. Commit | `git commit autoresearch-spec.md` — spec is version-controlled |
+| 5. Loop | Spec validates automatically each iteration (tiered: T0/T1/T2) |
+
+**Decision matrix with spec:**
+
+```
+metric improved + spec passes  → KEEP
+metric improved + spec fails   → DISCARD (metric gaming)
+metric same/worse              → DISCARD
+```
+
 ## Why Specs Matter
 
 Metrics tell you if things got *numerically* better. Specs tell you if things still *behave correctly*.

@@ -1,6 +1,6 @@
 # Core Principles — From Karpathy's Autoresearch
 
-7 universal principles extracted from autoresearch, applicable to ANY autonomous work.
+8 universal principles extracted from autoresearch, applicable to ANY autonomous work.
 
 ## 1. Constraint = Enabler
 
@@ -85,8 +85,22 @@ Autoresearch CANNOT: change tokenizer, replace human direction, guarantee meanin
 
 **Apply:** At setup, explicitly state constraints. If agent hits a wall it can't solve (missing permissions, external dependency, needs human judgment), say so clearly instead of guessing.
 
+## 8. Specs Prevent Metric Gaming
+
+A metric alone can be gamed. A spec defines what must remain true.
+
+| Without Spec | With Spec |
+|---|---|
+| Coverage rises via trivial assertions | Spec requires existing behaviors preserved |
+| Bundle shrinks by removing features | Spec locks public API surface |
+| Response time drops by skipping validation | Spec enforces security invariants |
+
+**Why:** Metrics measure a number. Specs encode intent. Together they form a dual gate: the loop must improve the metric WITHOUT violating the behavioral contract.
+
+**Apply:** Before starting the loop, generate `autoresearch-spec.md` with invariants (must always be true), behaviors (must be preserved), and constraints (hard limits). Every spec item has a mechanical check command. See `references/spec-driven-workflow.md`.
+
 ## The Meta-Principle
 
-> Autonomy scales when you constrain scope, clarify success, mechanize verification, and let agents optimize tactics while humans optimize strategy.
+> Autonomy scales when you constrain scope, clarify success, mechanize verification, encode behavioral intent in specs, and let agents optimize tactics while humans optimize strategy.
 
 This isn't "removing humans." It's reassigning human effort from execution to direction. Humans become MORE valuable by focusing on irreducibly creative/strategic work.

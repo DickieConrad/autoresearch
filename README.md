@@ -5,7 +5,7 @@
 Based on [Karpathy's autoresearch](https://github.com/karpathy/autoresearch) — the principle that **constraint + mechanical metric + autonomous iteration = compounding gains**.
 
 [![Claude Code Skill](https://img.shields.io/badge/Claude_Code-Skill-blue?logo=anthropic&logoColor=white)](https://docs.anthropic.com/en/docs/claude-code)
-[![Version](https://img.shields.io/badge/version-1.0.2-blue.svg)](https://github.com/uditgoenka/autoresearch/releases)
+[![Version](https://img.shields.io/badge/version-1.1.0-blue.svg)](https://github.com/uditgoenka/autoresearch/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Based on](https://img.shields.io/badge/Based_on-Karpathy's_Autoresearch-orange)](https://github.com/karpathy/autoresearch)
 
@@ -311,6 +311,89 @@ Launch now? → [Unlimited] [Bounded] [Copy only]
 
 ---
 
+## Spec-Driven Development with `/autoresearch:spec` (v1.1.0)
+
+Metrics tell you if things got *numerically* better. But a metric alone can be gamed — coverage rises via trivial tests, bundle size drops by removing features, response time improves by skipping validation.
+
+`/autoresearch:spec` generates a **behavioral specification** that acts as a second verification gate. Every iteration must improve the metric AND satisfy the spec.
+
+### Usage
+
+```
+/autoresearch:spec
+```
+
+This scans your codebase and generates `autoresearch-spec.md` with three sections:
+
+```markdown
+# Autoresearch Spec
+
+## Invariants
+Things that must ALWAYS be true.
+- [ ] All tests pass: `npm test`
+- [ ] No new lint errors: `npm run lint | grep -c error`
+
+## Behaviors
+Observable behaviors that must be preserved.
+- [ ] Login returns 401 for wrong password
+- [ ] Rate limiter blocks after 100 requests/min
+
+## Constraints
+Hard limits the loop must respect.
+- [ ] No new runtime dependencies
+- [ ] Bundle size stays under 500KB
+```
+
+### How It Works in the Loop
+
+When `autoresearch-spec.md` exists, the loop adds a second gate after metric verification:
+
+```
+Metric improved + spec passes  → KEEP
+Metric improved + spec fails   → DISCARD (metric gaming detected)
+Metric same/worse              → DISCARD (as before)
+```
+
+This means the loop can't game the metric at the expense of correctness.
+
+### Tiered Validation
+
+To keep iterations fast, spec checks run on a tiered schedule:
+
+| Tier | Frequency | Items | Rationale |
+|------|-----------|-------|-----------|
+| T0: Invariants | Every iteration | Tests pass, lint clean | Catch breakage immediately |
+| T1: Behaviors | Every 5th iteration | Key user-facing behaviors | Behavioral drift is slower |
+| T2: Constraints | Every 10th iteration | Dep count, bundle size | These change rarely |
+
+### Example: Test Coverage with Spec Guard
+
+Without spec — the loop might add trivial `expect(true).toBe(true)` tests to inflate coverage.
+
+With spec:
+```
+/autoresearch:spec
+# Generates spec with invariant: "no snapshot tests", constraint: "all tests assert behavior"
+
+/autoresearch
+Goal: Increase test coverage to 95%
+Spec: autoresearch-spec.md
+```
+
+Now coverage can only increase through *meaningful* tests that pass behavioral checks.
+
+### When to Use
+
+| Situation | Use |
+|-----------|-----|
+| Running overnight without review | `/autoresearch:spec` first — safety net while you sleep |
+| Optimizing performance | Spec locks behavioral correctness while loop chases speed |
+| Refactoring | Spec ensures public API surface is preserved |
+| Content optimization | Spec guards factual accuracy while loop optimizes readability |
+| Any high-stakes loop | Spec = insurance against metric gaming |
+
+---
+
 ## Controlled Iterations with `/loop` (v1.0.1)
 
 > **Requires:** Claude Code **v1.0.32+** (the `/loop` command was introduced in this version)
@@ -399,9 +482,11 @@ Each iteration follows an 8-phase protocol:
 │                                                     │
 │  Phase 5: VERIFY                                    │
 │  Run mechanical metric command                      │
+│  + Spec gate (if autoresearch-spec.md exists)       │
 │                                                     │
 │  Phase 6: DECIDE                                    │
-│  Improved → keep | Worse → revert | Crash → fix    │
+│  Improved + spec OK → keep | Spec fail → revert    │
+│  Worse → revert | Crash → fix                      │
 │                                                     │
 │  Phase 7: LOG                                       │
 │  Append result to autoresearch-results.tsv          │
@@ -1106,7 +1191,7 @@ process.exit(score > 0 ? 0 : 1);
 
 ## Core Principles
 
-These 7 principles are extracted from [Karpathy's autoresearch](https://github.com/karpathy/autoresearch) and generalized to any domain:
+These 8 principles are extracted from [Karpathy's autoresearch](https://github.com/karpathy/autoresearch) and generalized to any domain:
 
 ### 1. Constraint = Enabler
 
@@ -1160,6 +1245,10 @@ Every successful change is committed. Failures are reverted. This enables causal
 
 If the agent hits a wall (missing permissions, external dependency, needs human judgment), it says so clearly instead of guessing.
 
+### 8. Specs Prevent Metric Gaming
+
+A metric alone can be gamed. A spec defines invariants, behaviors, and constraints that must hold across all iterations — preventing the loop from improving a number at the expense of correctness. Metrics measure quantity; specs encode intent.
+
 ---
 
 ## 8 Critical Rules
@@ -1204,9 +1293,10 @@ autoresearch/
         ├── SKILL.md                                   ← Main skill (loaded by Claude Code)
         └── references/
             ├── autonomous-loop-protocol.md            ← Detailed 8-phase loop protocol
-            ├── core-principles.md                     ← 7 universal principles
+            ├── core-principles.md                     ← 8 universal principles
             ├── plan-workflow.md                        ← /autoresearch:plan wizard protocol
-            └── results-logging.md                     ← TSV tracking format + reporting
+            ├── results-logging.md                     ← TSV tracking format + reporting
+            └── spec-driven-workflow.md                ← /autoresearch:spec behavioral spec protocol
 ```
 
 ---
@@ -1230,7 +1320,7 @@ autoresearch/
 
 The meta-principle:
 
-> Autonomy scales when you constrain scope, clarify success, mechanize verification, and let agents optimize tactics while humans optimize strategy.
+> Autonomy scales when you constrain scope, clarify success, mechanize verification, encode behavioral intent in specs, and let agents optimize tactics while humans optimize strategy.
 
 ---
 
@@ -1238,6 +1328,9 @@ The meta-principle:
 
 **Q: I don't know what metric or verify command to use. How do I get started?**
 A: Run `/autoresearch:plan` — the planning wizard analyzes your codebase, suggests metrics based on your tooling, constructs a verify command, and dry-runs it before you launch. It's the easiest way to get started.
+
+**Q: What is `/autoresearch:spec` and when should I use it?**
+A: It generates a behavioral specification (`autoresearch-spec.md`) that acts as a second verification gate in the loop. Use it when running overnight, optimizing performance, refactoring, or any time you want to prevent the loop from gaming metrics at the expense of correctness. The spec defines invariants (must always be true), behaviors (must be preserved), and constraints (hard limits).
 
 **Q: Does this work with any Claude Code project?**
 A: Yes. Copy the skill to `.claude/skills/autoresearch/` in any project. It works with any language, framework, or domain.

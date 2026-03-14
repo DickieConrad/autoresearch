@@ -457,9 +457,10 @@ Before looping, Claude performs a one-time setup:
 | 1. Read context | Reads all in-scope files for full understanding |
 | 2. Define goal | Extracts or asks for a mechanical metric |
 | 3. Define scope | Identifies which files can be modified vs read-only |
-| 4. Create results log | Initializes `autoresearch-results.tsv` |
-| 5. Establish baseline | Runs verification on current state (iteration #0) |
-| 6. Confirm and go | Shows setup to user, then begins the loop |
+| 4. Generate spec (optional) | Runs `/autoresearch:spec` to create behavioral guardrails |
+| 5. Create results log | Initializes `autoresearch-results.tsv` |
+| 6. Establish baseline | Runs verification on current state (iteration #0) |
+| 7. Confirm and go | Shows setup to user, then begins the loop |
 
 ### The Autonomous Loop
 

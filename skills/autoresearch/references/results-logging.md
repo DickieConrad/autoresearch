@@ -7,7 +7,7 @@ Track every iteration in a structured log. Enables pattern recognition and preve
 Create `autoresearch-results.tsv` in the working directory (gitignored):
 
 ```tsv
-iteration	commit	metric	delta	status	description
+iteration	commit	metric	delta	status	spec_status	description
 ```
 
 ### Columns
@@ -19,18 +19,20 @@ iteration	commit	metric	delta	status	description
 | metric | float | Measured value from verification |
 | delta | float | Change from previous best (negative = improved for "lower is better") |
 | status | enum | `baseline`, `keep`, `discard`, `crash` |
+| spec_status | string | `pass`, `FAIL:{tier}:{item}`, or `-` if no spec exists |
 | description | string | One-sentence description of what was tried |
 
 ### Example
 
 ```tsv
-iteration	commit	metric	delta	status	description
-0	a1b2c3d	85.2	0.0	baseline	initial state — test coverage 85.2%
-1	b2c3d4e	87.1	+1.9	keep	add tests for auth middleware edge cases
-2	-	86.5	-0.6	discard	refactor test helpers (broke 2 tests)
-3	-	0.0	0.0	crash	add integration tests (DB connection failed)
-4	c3d4e5f	88.3	+1.2	keep	add tests for error handling in API routes
-5	d4e5f6g	89.0	+0.7	keep	add boundary value tests for validators
+iteration	commit	metric	delta	status	spec_status	description
+0	a1b2c3d	85.2	0.0	baseline	pass	initial state — test coverage 85.2%
+1	b2c3d4e	87.1	+1.9	keep	pass	add tests for auth middleware edge cases
+2	-	86.5	-0.6	discard	pass	refactor test helpers (broke 2 tests)
+3	-	0.0	0.0	crash	-	add integration tests (DB connection failed)
+4	-	89.0	+1.9	discard	FAIL:invariant:lint	add tests but introduce lint errors
+5	c3d4e5f	88.3	+1.2	keep	pass	add tests for error handling in API routes
+6	d4e5f6g	89.0	+0.7	keep	pass	add boundary value tests for validators
 ```
 
 ## Log Management

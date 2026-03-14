@@ -1380,6 +1380,8 @@ Areas of interest:
 - Better verification script templates
 - Integration with CI/CD pipelines
 - Performance benchmarks from real-world usage
+- Spec templates for common domains (API, frontend, ML, content)
+- Spec validation tooling and reporting improvements
 
 ---
 

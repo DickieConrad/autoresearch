@@ -204,3 +204,5 @@ See `references/core-principles.md` for the 8 generalizable principles from auto
 | Refactoring | Tests pass + LOC reduced | Target module | `npm test && wc -l` |
 
 Adapt the loop to your domain. The PRINCIPLES are universal; the METRICS are domain-specific.
+
+**Tip:** For any domain, consider running `/autoresearch:spec` first to generate behavioral guardrails. Specs are especially valuable for performance optimization (prevents removing features) and refactoring (locks public API surface).

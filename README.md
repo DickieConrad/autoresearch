@@ -1284,6 +1284,7 @@ Claude handles failures automatically:
 | Resource exhaustion (OOM) | Revert, try smaller variant |
 | Infinite loop / hang | Kill after timeout, revert, avoid that approach |
 | External dependency failure | Skip, log, try different approach |
+| Spec validation failure | Revert (metric gaming detected), try different approach that preserves spec invariants |
 
 ---
 

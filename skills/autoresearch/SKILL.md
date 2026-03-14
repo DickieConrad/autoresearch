@@ -186,10 +186,11 @@ LOOP (FOREVER or N times):
 6. **Simplicity wins** — Equal results + less code = KEEP. Tiny improvement + ugly complexity = DISCARD
 7. **Git is memory** — Every kept change committed. Agent reads history to learn patterns
 8. **When stuck, think harder** — Re-read files, re-read goal, combine near-misses, try radical changes. Don't ask for help unless truly blocked by missing access/permissions
+9. **Respect the spec** — If `autoresearch-spec.md` exists, every kept change must pass spec validation. Metric improvement that violates the spec is always discarded
 
 ## Principles Reference
 
-See `references/core-principles.md` for the 7 generalizable principles from autoresearch.
+See `references/core-principles.md` for the 8 generalizable principles from autoresearch.
 
 ## Adapting to Different Domains
 

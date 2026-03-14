@@ -1,0 +1,92 @@
+name: CD — Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  validate:
+    name: Pre-release Validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run doc quality checks
+        run: bash scripts/doc-quality.sh
+
+      - name: Verify version consistency
+        run: |
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          SKILL_VERSION=$(grep -oP 'version: \K[0-9.]+' skills/autoresearch/SKILL.md)
+          README_VERSION=$(grep -oP 'version-\K[0-9.]+' README.md | head -1)
+
+          echo "Tag: $TAG_VERSION"
+          echo "SKILL.md: $SKILL_VERSION"
+          echo "README badge: $README_VERSION"
+
+          if [[ "$TAG_VERSION" != "$SKILL_VERSION" ]]; then
+            echo "ERROR: Tag version ($TAG_VERSION) does not match SKILL.md version ($SKILL_VERSION)"
+            exit 1
+          fi
+
+          if [[ "$TAG_VERSION" != "$README_VERSION" ]]; then
+            echo "ERROR: Tag version ($TAG_VERSION) does not match README badge version ($README_VERSION)"
+            exit 1
+          fi
+
+          echo "All versions match."
+
+  release:
+    name: Create GitHub Release
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Extract version from tag
+        id: version
+        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Generate release notes
+        id: notes
+        run: |
+          # Extract changelog from git log since last tag
+          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          if [[ -n "$PREV_TAG" ]]; then
+            COMMITS=$(git log "$PREV_TAG"..HEAD --oneline --no-merges)
+          else
+            COMMITS=$(git log --oneline --no-merges -20)
+          fi
+
+          {
+            echo "notes<<EOF"
+            echo "## What's New in v${{ steps.version.outputs.version }}"
+            echo ""
+            echo "### Changes"
+            echo ""
+            echo "$COMMITS" | while IFS= read -r line; do
+              echo "- $line"
+            done
+            echo ""
+            echo "### Install"
+            echo ""
+            echo '```bash'
+            echo "git clone https://github.com/${{ github.repository }}.git"
+            echo "cp -r autoresearch/skills/autoresearch .claude/skills/autoresearch"
+            echo '```'
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: v${{ steps.version.outputs.version }}
+          body: ${{ steps.notes.outputs.notes }}
+          draft: false
+          prerelease: false

@@ -1318,8 +1318,16 @@ Claude handles failures automatically:
 
 ```
 autoresearch/
+├── .github/workflows/
+│   ├── ci.yml                                         ← CI: doc quality, markdown lint, link check, shellcheck
+│   └── release.yml                                    ← CD: version validation + GitHub Release on tag push
+├── .markdownlint.json                                 ← Markdown lint config
+├── .markdown-link-check.json                          ← Link checker config
+├── Makefile                                           ← Local dev commands (make check, make lint)
 ├── README.md                                          ← You are here
 ├── LICENSE                                            ← MIT License
+├── scripts/
+│   └── doc-quality.sh                                 ← Mechanical doc quality checker (43 checks)
 └── skills/
     └── autoresearch/
         ├── SKILL.md                                   ← Main skill (loaded by Claude Code)

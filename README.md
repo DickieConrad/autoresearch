@@ -96,13 +96,21 @@ Metric: bundle size in KB (lower is better)
 Verify: npm run build 2>&1 | grep "First Load JS"
 ```
 
-### 3. Walk Away
+### 3. (Optional) Generate a Spec
+
+```
+/autoresearch:spec
+```
+
+Creates `autoresearch-spec.md` with behavioral guardrails — invariants, behaviors, and constraints the loop must respect. Prevents metric gaming during overnight runs.
+
+### 4. Walk Away
 
 Claude will:
 1. Read all in-scope files
 2. Establish a baseline measurement
 3. Start iterating — one change at a time
-4. Keep improvements, auto-revert failures
+4. Keep improvements, auto-revert failures (and spec violations)
 5. Log every iteration in `autoresearch-results.tsv`
 6. Print a summary every 10 iterations
 7. **Never stop until you interrupt** (or until N iterations complete in bounded mode)

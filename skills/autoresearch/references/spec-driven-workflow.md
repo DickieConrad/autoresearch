@@ -57,16 +57,16 @@ Things that must ALWAYS be true, regardless of changes.
 ## Behaviors
 Observable behaviors that must be preserved.
 
-- [ ] Login returns 401 for wrong password
-- [ ] Rate limiter blocks after 100 requests/min
-- [ ] WebSocket reconnects within 5 seconds
+- [ ] Login returns 401 for wrong password: `curl -s -o /dev/null -w '%{http_code}' -X POST localhost:3000/api/auth -d '{"password":"wrong"}' | grep 401`
+- [ ] Rate limiter blocks after 100 requests/min: `for i in $(seq 1 101); do curl -s -o /dev/null -w '%{http_code}' localhost:3000/api/health; done | tail -1 | grep 429`
+- [ ] WebSocket reconnects within 5 seconds: `npm run test:ws-reconnect`
 
 ## Constraints
 Hard limits the loop must respect.
 
-- [ ] No new runtime dependencies
-- [ ] Public API signatures unchanged
-- [ ] Bundle size stays under 500KB
+- [ ] No new runtime dependencies: `jq '.dependencies | length' package.json`
+- [ ] Public API signatures unchanged: `npm run test:contract`
+- [ ] Bundle size stays under 500KB: `npm run build 2>&1 | grep 'First Load' | awk '{print $4}'`
 ```
 
 ### Spec Item Rules

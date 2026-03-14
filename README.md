@@ -900,6 +900,8 @@ Verify: grep -rE "#[0-9a-fA-F]{3,6}|px\b" src/ --include="*.tsx" --include="*.cs
 
 Claude Code supports [MCP (Model Context Protocol)](https://modelcontextprotocol.io/) servers, which give Claude access to external tools and APIs. When combined with autoresearch, this unlocks **real-time data-driven iteration loops**.
 
+**Tip:** MCP tools can also power spec validation — use a database MCP to verify data integrity constraints, or a GitHub MCP to ensure CI checks still pass as part of your spec.
+
 ### How It Works
 
 MCP servers expose tools that Claude can call during the autoresearch loop. Instead of just reading files and running scripts, Claude can:

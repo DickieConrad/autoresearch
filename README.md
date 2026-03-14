@@ -114,7 +114,7 @@ The hardest part of autoresearch isn't the loop — it's **defining Scope, Metri
 
 `/autoresearch:plan` is an interactive wizard that converts your plain-language goal into a validated, ready-to-execute configuration.
 
-### Usage
+### Plan Usage
 
 ```
 /autoresearch:plan
@@ -299,7 +299,7 @@ Launch now? → [Unlimited] [Bounded] [Copy only]
   Verify: docker build -t bench . -q 2>&1 && docker images bench --format "{{.Size}}" | sed 's/MB//'
 ```
 
-### When to Use
+### When to Use Plan
 
 | Situation | Use |
 |-----------|-----|
@@ -317,7 +317,7 @@ Metrics tell you if things got *numerically* better. But a metric alone can be g
 
 `/autoresearch:spec` generates a **behavioral specification** that acts as a second verification gate. Every iteration must improve the metric AND satisfy the spec.
 
-### Usage
+### Spec Usage
 
 ```
 /autoresearch:spec
@@ -382,7 +382,7 @@ Spec: autoresearch-spec.md
 
 Now coverage can only increase through *meaningful* tests that pass behavioral checks.
 
-### When to Use
+### When to Use Spec
 
 | Situation | Use |
 |-----------|-----|
@@ -400,7 +400,7 @@ Now coverage can only increase through *meaningful* tests that pass behavioral c
 
 By default, autoresearch loops **forever** until manually interrupted. Starting in v1.0.1, you can optionally specify a **loop count** using Claude Code's built-in `/loop` command to run a fixed number of iterations.
 
-### Usage
+### Loop Usage
 
 **Unlimited (default) — loop forever:**
 ```

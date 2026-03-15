@@ -5,7 +5,7 @@
 Based on [Karpathy's autoresearch](https://github.com/karpathy/autoresearch) — the principle that **constraint + mechanical metric + autonomous iteration = compounding gains**.
 
 [![Claude Code Skill](https://img.shields.io/badge/Claude_Code-Skill-blue?logo=anthropic&logoColor=white)](https://docs.anthropic.com/en/docs/claude-code)
-[![Version](https://img.shields.io/badge/version-1.0.2-blue.svg)](https://github.com/uditgoenka/autoresearch/releases)
+[![Version](https://img.shields.io/badge/version-1.1.0-blue.svg)](https://github.com/uditgoenka/autoresearch/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Based on](https://img.shields.io/badge/Based_on-Karpathy's_Autoresearch-orange)](https://github.com/karpathy/autoresearch)
 
@@ -28,12 +28,13 @@ LOOP (FOREVER or N times):
   3. Make ONE focused change
   4. Git commit (before verification)
   5. Run mechanical verification (tests, benchmarks, scores)
-  6. If improved → keep. If worse → git revert. If crashed → fix or skip.
-  7. Log the result
+     + Spec validation (if autoresearch-spec.md exists)
+  6. If improved + spec OK → keep. If spec fails → revert. If worse → revert.
+  7. Log the result (with spec_status)
   8. Repeat. Default: NEVER STOP. With /loop N: stop after N iterations.
 ```
 
-Every improvement stacks. Every failure auto-reverts. Progress is logged in TSV format.
+Every improvement stacks. Every failure auto-reverts. Specs prevent metric gaming. Progress is logged in TSV format.
 
 ---
 
@@ -95,16 +96,107 @@ Metric: bundle size in KB (lower is better)
 Verify: npm run build 2>&1 | grep "First Load JS"
 ```
 
-### 3. Walk Away
+### 3. (Optional) Generate a Spec
+
+```
+/autoresearch:spec
+```
+
+Creates `autoresearch-spec.md` with behavioral guardrails — invariants, behaviors, and constraints the loop must respect. Prevents metric gaming during overnight runs.
+
+### 4. Walk Away
 
 Claude will:
 1. Read all in-scope files
 2. Establish a baseline measurement
 3. Start iterating — one change at a time
-4. Keep improvements, auto-revert failures
+4. Keep improvements, auto-revert failures (and spec violations)
 5. Log every iteration in `autoresearch-results.tsv`
 6. Print a summary every 10 iterations
 7. **Never stop until you interrupt** (or until N iterations complete in bounded mode)
+
+---
+
+## Spec-Driven Development with `/autoresearch:spec` (v1.1.0)
+
+Metrics tell you if things got *numerically* better. But a metric alone can be gamed — coverage rises via trivial tests, bundle size drops by removing features, response time improves by skipping validation.
+
+`/autoresearch:spec` generates a **behavioral specification** that acts as a second verification gate. Every iteration must improve the metric AND satisfy the spec.
+
+### Spec Usage
+
+```
+/autoresearch:spec
+```
+
+This scans your codebase and generates `autoresearch-spec.md` with three sections:
+
+```markdown
+# Autoresearch Spec
+
+## Invariants
+Things that must ALWAYS be true.
+- [ ] All tests pass: `npm test`
+- [ ] No new lint errors: `npm run lint | grep -c error`
+
+## Behaviors
+Observable behaviors that must be preserved.
+- [ ] Login returns 401 for wrong password
+- [ ] Rate limiter blocks after 100 requests/min
+
+## Constraints
+Hard limits the loop must respect.
+- [ ] No new runtime dependencies
+- [ ] Bundle size stays under 500KB
+```
+
+### How It Works in the Loop
+
+When `autoresearch-spec.md` exists, the loop adds a second gate after metric verification:
+
+```
+Metric improved + spec passes  → KEEP
+Metric improved + spec fails   → DISCARD (metric gaming detected)
+Metric same/worse              → DISCARD (as before)
+```
+
+This means the loop can't game the metric at the expense of correctness.
+
+### Tiered Validation
+
+To keep iterations fast, spec checks run on a tiered schedule:
+
+| Tier | Frequency | Items | Rationale |
+|------|-----------|-------|-----------|
+| T0: Invariants | Every iteration | Tests pass, lint clean | Catch breakage immediately |
+| T1: Behaviors | Every 5th iteration | Key user-facing behaviors | Behavioral drift is slower |
+| T2: Constraints | Every 10th iteration | Dep count, bundle size | These change rarely |
+
+### Example: Test Coverage with Spec Guard
+
+Without spec — the loop might add trivial `expect(true).toBe(true)` tests to inflate coverage.
+
+With spec:
+```
+/autoresearch:spec
+# Generates spec with invariant: "no snapshot tests", constraint: "all tests assert behavior"
+
+/autoresearch
+Goal: Increase test coverage to 95%
+Spec: autoresearch-spec.md
+```
+
+Now coverage can only increase through *meaningful* tests that pass behavioral checks.
+
+### When to Use Spec
+
+| Situation | Use |
+|-----------|-----|
+| Running overnight without review | `/autoresearch:spec` first — safety net while you sleep |
+| Optimizing performance | Spec locks behavioral correctness while loop chases speed |
+| Refactoring | Spec ensures public API surface is preserved |
+| Content optimization | Spec guards factual accuracy while loop optimizes readability |
+| Any high-stakes loop | Spec = insurance against metric gaming |
 
 ---
 
@@ -114,7 +206,7 @@ The hardest part of autoresearch isn't the loop — it's **defining Scope, Metri
 
 `/autoresearch:plan` is an interactive wizard that converts your plain-language goal into a validated, ready-to-execute configuration.
 
-### Usage
+### Plan Usage
 
 ```
 /autoresearch:plan
@@ -299,7 +391,7 @@ Launch now? → [Unlimited] [Bounded] [Copy only]
   Verify: docker build -t bench . -q 2>&1 && docker images bench --format "{{.Size}}" | sed 's/MB//'
 ```
 
-### When to Use
+### When to Use Plan
 
 | Situation | Use |
 |-----------|-----|
@@ -317,7 +409,7 @@ Launch now? → [Unlimited] [Bounded] [Copy only]
 
 By default, autoresearch loops **forever** until manually interrupted. Starting in v1.0.1, you can optionally specify a **loop count** using Claude Code's built-in `/loop` command to run a fixed number of iterations.
 
-### Usage
+### Loop Usage
 
 **Unlimited (default) — loop forever:**
 ```
@@ -374,9 +466,10 @@ Before looping, Claude performs a one-time setup:
 | 1. Read context | Reads all in-scope files for full understanding |
 | 2. Define goal | Extracts or asks for a mechanical metric |
 | 3. Define scope | Identifies which files can be modified vs read-only |
-| 4. Create results log | Initializes `autoresearch-results.tsv` |
-| 5. Establish baseline | Runs verification on current state (iteration #0) |
-| 6. Confirm and go | Shows setup to user, then begins the loop |
+| 4. Generate spec (optional) | Runs `/autoresearch:spec` to create behavioral guardrails |
+| 5. Create results log | Initializes `autoresearch-results.tsv` |
+| 6. Establish baseline | Runs verification on current state (iteration #0) |
+| 7. Confirm and go | Shows setup to user, then begins the loop |
 
 ### The Autonomous Loop
 
@@ -399,9 +492,11 @@ Each iteration follows an 8-phase protocol:
 │                                                     │
 │  Phase 5: VERIFY                                    │
 │  Run mechanical metric command                      │
+│  + Spec gate (if autoresearch-spec.md exists)       │
 │                                                     │
 │  Phase 6: DECIDE                                    │
-│  Improved → keep | Worse → revert | Crash → fix    │
+│  Improved + spec OK → keep | Spec fail → revert    │
+│  Worse → revert | Crash → fix                      │
 │                                                     │
 │  Phase 7: LOG                                       │
 │  Append result to autoresearch-results.tsv          │
@@ -417,14 +512,17 @@ Each iteration follows an 8-phase protocol:
 Every iteration is logged in TSV format:
 
 ```tsv
-iteration	commit	metric	delta	status	description
-0	a1b2c3d	85.2	0.0	baseline	initial state — test coverage 85.2%
-1	b2c3d4e	87.1	+1.9	keep	add tests for auth middleware edge cases
-2	-	86.5	-0.6	discard	refactor test helpers (broke 2 tests)
-3	-	0.0	0.0	crash	add integration tests (DB connection failed)
-4	c3d4e5f	88.3	+1.2	keep	add tests for error handling in API routes
-5	d4e5f6g	89.0	+0.7	keep	add boundary value tests for validators
+iteration	commit	metric	delta	status	spec_status	description
+0	a1b2c3d	85.2	0.0	baseline	pass	initial state — test coverage 85.2%
+1	b2c3d4e	87.1	+1.9	keep	pass	add tests for auth middleware edge cases
+2	-	86.5	-0.6	discard	pass	refactor test helpers (broke 2 tests)
+3	-	0.0	0.0	crash	-	add integration tests (DB connection failed)
+4	-	89.0	+1.9	discard	FAIL:invariant:lint	add tests but introduce lint errors
+5	c3d4e5f	88.3	+1.2	keep	pass	add tests for error handling in API routes
+6	d4e5f6g	89.0	+0.7	keep	pass	add boundary value tests for validators
 ```
+
+The `spec_status` column tracks whether the behavioral spec passed or failed for each iteration. When no spec exists, the column shows `-`.
 
 Every 10 iterations, Claude prints a summary:
 
@@ -802,6 +900,8 @@ Verify: grep -rE "#[0-9a-fA-F]{3,6}|px\b" src/ --include="*.tsx" --include="*.cs
 
 Claude Code supports [MCP (Model Context Protocol)](https://modelcontextprotocol.io/) servers, which give Claude access to external tools and APIs. When combined with autoresearch, this unlocks **real-time data-driven iteration loops**.
 
+**Tip:** MCP tools can also power spec validation — use a database MCP to verify data integrity constraints, or a GitHub MCP to ensure CI checks still pass as part of your spec.
+
 ### How It Works
 
 MCP servers expose tools that Claude can call during the autoresearch loop. Instead of just reading files and running scripts, Claude can:
@@ -1072,6 +1172,21 @@ Goal: Phase 1 — all tests pass. Phase 2 — coverage >80%. Phase 3 — zero li
 Advance to next phase only when current is stable for 3 consecutive iterations.
 ```
 
+### Pattern 8: "Spec-Guarded Optimization"
+
+Optimize aggressively while a spec prevents metric gaming.
+
+```
+/autoresearch:spec
+# Generates invariants (tests pass, lint clean), behaviors (API contracts), constraints (no new deps)
+
+/autoresearch
+Goal: Reduce API response time under 100ms (p95)
+Spec: autoresearch-spec.md
+```
+
+The loop chases speed but can't sacrifice correctness — spec violations auto-revert. Ideal for overnight performance optimization.
+
 ---
 
 ## Writing Verification Scripts
@@ -1106,7 +1221,7 @@ process.exit(score > 0 ? 0 : 1);
 
 ## Core Principles
 
-These 7 principles are extracted from [Karpathy's autoresearch](https://github.com/karpathy/autoresearch) and generalized to any domain:
+These 8 principles are extracted from [Karpathy's autoresearch](https://github.com/karpathy/autoresearch) and generalized to any domain:
 
 ### 1. Constraint = Enabler
 
@@ -1160,9 +1275,13 @@ Every successful change is committed. Failures are reverted. This enables causal
 
 If the agent hits a wall (missing permissions, external dependency, needs human judgment), it says so clearly instead of guessing.
 
+### 8. Specs Prevent Metric Gaming
+
+A metric alone can be gamed. A spec defines invariants, behaviors, and constraints that must hold across all iterations — preventing the loop from improving a number at the expense of correctness. Metrics measure quantity; specs encode intent.
+
 ---
 
-## 8 Critical Rules
+## 9 Critical Rules
 
 These rules govern Claude's behavior during the autonomous loop:
 
@@ -1176,6 +1295,7 @@ These rules govern Claude's behavior during the autonomous loop:
 | 6 | **Simplicity wins** | Equal results + less code = KEEP. Tiny gain + ugly complexity = DISCARD. |
 | 7 | **Git is memory** | Every kept change committed. Agent reads history to learn patterns. |
 | 8 | **When stuck, think harder** | Re-read files, combine near-misses, try radical changes. |
+| 9 | **Respect the spec** | If a spec exists, every kept change must pass spec validation. Metric gaming = discard. |
 
 ---
 
@@ -1190,6 +1310,7 @@ Claude handles failures automatically:
 | Resource exhaustion (OOM) | Revert, try smaller variant |
 | Infinite loop / hang | Kill after timeout, revert, avoid that approach |
 | External dependency failure | Skip, log, try different approach |
+| Spec validation failure | Revert (metric gaming detected), try different approach that preserves spec invariants |
 
 ---
 
@@ -1197,16 +1318,25 @@ Claude handles failures automatically:
 
 ```
 autoresearch/
+├── .github/workflows/
+│   ├── ci.yml                                         ← CI: doc quality, markdown lint, link check, shellcheck
+│   └── release.yml                                    ← CD: version validation + GitHub Release on tag push
+├── .markdownlint.json                                 ← Markdown lint config
+├── .markdown-link-check.json                          ← Link checker config
+├── Makefile                                           ← Local dev commands (make check, make lint)
 ├── README.md                                          ← You are here
 ├── LICENSE                                            ← MIT License
+├── scripts/
+│   └── doc-quality.sh                                 ← Mechanical doc quality checker (43 checks)
 └── skills/
     └── autoresearch/
         ├── SKILL.md                                   ← Main skill (loaded by Claude Code)
         └── references/
             ├── autonomous-loop-protocol.md            ← Detailed 8-phase loop protocol
-            ├── core-principles.md                     ← 7 universal principles
+            ├── core-principles.md                     ← 8 universal principles
             ├── plan-workflow.md                        ← /autoresearch:plan wizard protocol
-            └── results-logging.md                     ← TSV tracking format + reporting
+            ├── results-logging.md                     ← TSV tracking format + reporting
+            └── spec-driven-workflow.md                ← /autoresearch:spec behavioral spec protocol
 ```
 
 ---
@@ -1230,7 +1360,7 @@ autoresearch/
 
 The meta-principle:
 
-> Autonomy scales when you constrain scope, clarify success, mechanize verification, and let agents optimize tactics while humans optimize strategy.
+> Autonomy scales when you constrain scope, clarify success, mechanize verification, encode behavioral intent in specs, and let agents optimize tactics while humans optimize strategy.
 
 ---
 
@@ -1238,6 +1368,9 @@ The meta-principle:
 
 **Q: I don't know what metric or verify command to use. How do I get started?**
 A: Run `/autoresearch:plan` — the planning wizard analyzes your codebase, suggests metrics based on your tooling, constructs a verify command, and dry-runs it before you launch. It's the easiest way to get started.
+
+**Q: What is `/autoresearch:spec` and when should I use it?**
+A: It generates a behavioral specification (`autoresearch-spec.md`) that acts as a second verification gate in the loop. Use it when running overnight, optimizing performance, refactoring, or any time you want to prevent the loop from gaming metrics at the expense of correctness. The spec defines invariants (must always be true), behaviors (must be preserved), and constraints (hard limits).
 
 **Q: Does this work with any Claude Code project?**
 A: Yes. Copy the skill to `.claude/skills/autoresearch/` in any project. It works with any language, framework, or domain.
@@ -1283,6 +1416,8 @@ Areas of interest:
 - Better verification script templates
 - Integration with CI/CD pipelines
 - Performance benchmarks from real-world usage
+- Spec templates for common domains (API, frontend, ML, content)
+- Spec validation tooling and reporting improvements
 
 ---
 

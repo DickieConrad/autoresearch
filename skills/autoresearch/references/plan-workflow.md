@@ -61,6 +61,8 @@ AskUserQuestion:
 - Warn if scope exceeds 50 files (agent context may struggle)
 - Warn if scope includes test files AND source files (prefer separating)
 
+**Spec suggestion:** After scope is defined, suggest running `/autoresearch:spec` to generate behavioral guardrails. This is especially valuable for overnight runs or performance optimization where metric gaming is a risk. See `references/spec-driven-workflow.md`.
+
 ### Phase 4: Define Metric
 
 This is the critical step. The metric must be **mechanical** — extractable from a command output as a single number.

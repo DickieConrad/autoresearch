@@ -58,7 +58,7 @@ git commit -m "experiment: <one-sentence description>"
 
 Commit BEFORE running verification so rollback is clean: `git reset --hard HEAD~1`
 
-## Phase 5: Verify (Mechanical Only)
+## Phase 5: Verify (Mechanical + Spec)
 
 Run the agreed-upon verification command. Capture output.
 
@@ -66,12 +66,34 @@ Run the agreed-upon verification command. Capture output.
 
 **Extract metric:** Parse the verification output for the specific metric number.
 
+### Spec Validation (if spec exists)
+
+If `autoresearch-spec.md` exists, run spec checks after the metric extraction:
+
+```
+1. Run metric verification (as above)
+2. IF metric improved OR metric same:
+     Run spec validation using tiered schedule:
+       T0 (invariants): every iteration
+       T1 (behaviors): every 5th iteration
+       T2 (constraints): every 10th iteration
+     IF any spec item fails:
+       STATUS = "spec_violation"
+       Log which item failed
+```
+
+Spec validation is a **second gate** — it prevents metric gaming by ensuring behavioral correctness is maintained. See `references/spec-driven-workflow.md` for full spec protocol.
+
 ## Phase 6: Decide (No Ambiguity)
 
 ```
-IF metric_improved:
+IF metric_improved AND (no spec OR spec_passes):
     STATUS = "keep"
     # Do nothing — commit stays
+ELIF metric_improved AND spec_fails:
+    STATUS = "discard"  # Metric gaming detected
+    git reset --hard HEAD~1
+    Log reason: "spec violation: {item}"
 ELIF metric_same_or_worse:
     STATUS = "discard"
     git reset --hard HEAD~1
@@ -86,16 +108,21 @@ ELIF crashed:
 
 **Simplicity override:** If metric barely improved (+<0.1%) but change adds significant complexity, treat as "discard". If metric unchanged but code is simpler, treat as "keep".
 
+**Spec override:** If metric improved but a spec item fails, ALWAYS discard. The spec is a hard gate — no exceptions. This prevents the loop from gaming metrics at the expense of correctness.
+
 ## Phase 7: Log Results
 
 Append to results log (TSV format):
 
 ```
-iteration  commit   metric   status   description
-42         a1b2c3d  0.9821   keep     increase attention heads from 8 to 12
-43         -        0.9845   discard  switch optimizer to SGD
-44         -        0.0000   crash    double batch size (OOM)
+iteration  commit   metric   status        spec_status  description
+42         a1b2c3d  0.9821   keep          pass         increase attention heads from 8 to 12
+43         -        0.9845   discard       pass         switch optimizer to SGD
+44         -        0.0000   crash         -            double batch size (OOM)
+45         -        0.9860   discard       FAIL:lint    add dropout but introduce lint errors
 ```
+
+When no spec exists, `spec_status` is `-`. When a spec exists, it is `pass` or `FAIL:{tier}:{item}`.
 
 ## Phase 8: Repeat
 
@@ -131,9 +158,10 @@ Applies to both modes:
 1. Re-read ALL in-scope files from scratch
 2. Re-read the original goal/direction
 3. Review entire results log for patterns
-4. Try combining 2-3 previously successful changes
-5. Try the OPPOSITE of what hasn't been working
-6. Try a radical architectural change
+4. If spec exists, re-read `autoresearch-spec.md` — discards may be caused by spec violations rather than metric regressions. Check if the spec is too strict or if your approach needs to change to satisfy both metric and spec
+5. Try combining 2-3 previously successful changes
+6. Try the OPPOSITE of what hasn't been working
+7. Try a radical architectural change
 
 ## Crash Recovery
 

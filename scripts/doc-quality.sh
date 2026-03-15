@@ -101,10 +101,7 @@ done <<< "$(grep -A 20 "Repository Structure" "$ROOT/README.md" | grep -E '(├|
 
 # ── 8. TSV format consistency ──────────────────────────────────────
 # If results-logging.md and autonomous-loop-protocol.md both show TSV, columns should match
-LOG_COLS=$(grep -A1 '^```tsv' "$ROOT/skills/autoresearch/references/results-logging.md" 2>/dev/null | tail -1 | tr '\t' '\n' | wc -l)
-LOOP_COLS=$(grep -A1 '^```$' "$ROOT/skills/autoresearch/references/autonomous-loop-protocol.md" 2>/dev/null | head -1 | awk '{print NF}')
-# Just check that loop protocol has more columns than results-logging (since we added spec_status)
-# This is a loose check — tight checking is fragile
+# Column counts intentionally not compared — tight checking is fragile
 
 # ── 9. Orphan references ──────────────────────────────────────────
 # Reference files that exist but are never mentioned in SKILL.md
@@ -372,7 +369,6 @@ if [[ -f "$ROOT/skills/autoresearch/references/spec-driven-workflow.md" ]]; then
 fi
 
 # ── 38. README loop description should show spec_status in TSV ───
-LOOP_TEXT=$(sed -n '/The loop:/,/^---/p' "$ROOT/README.md" 2>/dev/null || true)
 if [[ -f "$ROOT/skills/autoresearch/references/spec-driven-workflow.md" ]]; then
   # The top-level "The loop:" summary should mention spec
   TOPLEVEL_LOOP=$(sed -n '/\*\*The loop:\*\*/,/^---/p' "$ROOT/README.md" 2>/dev/null || true)
@@ -383,7 +379,6 @@ if [[ -f "$ROOT/skills/autoresearch/references/spec-driven-workflow.md" ]]; then
 fi
 
 # ── 40. SKILL.md critical rules count matches ───────────────────
-SKILL_RULES_COUNT=$(grep -cP '^\d+\. \*\*' "$ROOT/skills/autoresearch/SKILL.md" 2>/dev/null || echo "0")
 # Rules section specifically
 SKILL_RULES_SECTION=$(sed -n '/## Critical Rules/,/## Principles/p' "$ROOT/skills/autoresearch/SKILL.md" 2>/dev/null || true)
 SKILL_RULES_IN_SECTION=$(echo "$SKILL_RULES_SECTION" | grep -cP '^\d+\. \*\*' 2>/dev/null || echo "0")
@@ -405,7 +400,7 @@ fi
 if [[ -f "$ROOT/skills/autoresearch/references/spec-driven-workflow.md" ]]; then
   # Count spec items that have a check command (colon followed by backtick)
   SPEC_ITEMS=$(grep -cP '^\- \[ \]' "$ROOT/skills/autoresearch/references/spec-driven-workflow.md" 2>/dev/null || echo "0")
-  SPEC_WITH_CMD=$(grep -P '^\- \[ \].*`' "$ROOT/skills/autoresearch/references/spec-driven-workflow.md" 2>/dev/null | wc -l || echo "0")
+  SPEC_WITH_CMD=$(grep -cP '^\- \[ \].*`' "$ROOT/skills/autoresearch/references/spec-driven-workflow.md" 2>/dev/null || echo "0")
   SPEC_WITHOUT_CMD=$((SPEC_ITEMS - SPEC_WITH_CMD))
   if [[ "$SPEC_WITHOUT_CMD" -gt 0 ]]; then
     echo "QUALITY: spec-driven-workflow.md has $SPEC_WITHOUT_CMD spec items without check commands"

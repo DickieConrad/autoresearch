@@ -19,10 +19,11 @@ A [Claude Code skill](https://docs.anthropic.com/en/docs/claude-code/skills) tha
 You set the GOAL → Claude runs the LOOP → You wake up to results
 ```
 
-**The loop:**
+### The loop
 
 ```
 LOOP (FOREVER or N times):
+
   1. Review current state + git history + results log
   2. Pick the next change (based on what worked, what failed, what's untried)
   3. Make ONE focused change
@@ -62,9 +63,11 @@ Clone this repo and copy the skill to your Claude Code skills directory:
 
 ```bash
 # Clone
+
 git clone https://github.com/uditgoenka/autoresearch.git
 
 # Copy to your project's Claude Code skills
+
 cp -r autoresearch/skills/autoresearch .claude/skills/autoresearch
 ```
 
@@ -107,6 +110,7 @@ Creates `autoresearch-spec.md` with behavioral guardrails — invariants, behavi
 ### 4. Walk Away
 
 Claude will:
+
 1. Read all in-scope files
 2. Establish a baseline measurement
 3. Start iterating — one change at a time
@@ -135,17 +139,23 @@ This scans your codebase and generates `autoresearch-spec.md` with three section
 # Autoresearch Spec
 
 ## Invariants
+
 Things that must ALWAYS be true.
+
 - [ ] All tests pass: `npm test`
 - [ ] No new lint errors: `npm run lint | grep -c error`
 
 ## Behaviors
+
 Observable behaviors that must be preserved.
+
 - [ ] Login returns 401 for wrong password
 - [ ] Rate limiter blocks after 100 requests/min
 
 ## Constraints
+
 Hard limits the loop must respect.
+
 - [ ] No new runtime dependencies
 - [ ] Bundle size stays under 500KB
 ```
@@ -167,7 +177,7 @@ This means the loop can't game the metric at the expense of correctness.
 To keep iterations fast, spec checks run on a tiered schedule:
 
 | Tier | Frequency | Items | Rationale |
-|------|-----------|-------|-----------|
+| ------ | ----------- | ------- | ----------- |
 | T0: Invariants | Every iteration | Tests pass, lint clean | Catch breakage immediately |
 | T1: Behaviors | Every 5th iteration | Key user-facing behaviors | Behavioral drift is slower |
 | T2: Constraints | Every 10th iteration | Dep count, bundle size | These change rarely |
@@ -177,8 +187,10 @@ To keep iterations fast, spec checks run on a tiered schedule:
 Without spec — the loop might add trivial `expect(true).toBe(true)` tests to inflate coverage.
 
 With spec:
+
 ```
 /autoresearch:spec
+
 # Generates spec with invariant: "no snapshot tests", constraint: "all tests assert behavior"
 
 /autoresearch
@@ -191,7 +203,7 @@ Now coverage can only increase through *meaningful* tests that pass behavioral c
 ### When to Use Spec
 
 | Situation | Use |
-|-----------|-----|
+| ----------- | ----- |
 | Running overnight without review | `/autoresearch:spec` first — safety net while you sleep |
 | Optimizing performance | Spec locks behavioral correctness while loop chases speed |
 | Refactoring | Spec ensures public API surface is preserved |
@@ -259,7 +271,7 @@ The wizard walks you through 5 questions (max) to nail down your configuration:
 The wizard **refuses to proceed** until:
 
 | Gate | Requirement |
-|------|-------------|
+| ------ | ------------- |
 | Scope | Glob resolves to ≥1 file |
 | Metric | Outputs a parseable number (not "PASS"/"FAIL"/subjective) |
 | Verify | Dry-run succeeds (exit code 0 + extractable metric) |
@@ -289,7 +301,8 @@ Launch now? → [Unlimited] [Bounded] [Copy only]
 
 ### More Examples
 
-**Test Coverage (Node.js)**
+#### Test Coverage (Node.js)
+
 ```
 > /autoresearch:plan Increase test coverage to 95%
 
@@ -306,7 +319,8 @@ Launch now? → [Unlimited] [Bounded] [Copy only]
   Verify: npx jest --coverage --silent 2>&1 | grep "All files" | awk '{print $4}'
 ```
 
-**Lighthouse Performance (Next.js)**
+#### Lighthouse Performance (Next.js)
+
 ```
 > /autoresearch:plan Improve page load speed
 
@@ -323,7 +337,8 @@ Launch now? → [Unlimited] [Bounded] [Copy only]
   Verify: npx lighthouse http://localhost:3000 --output json --quiet | jq '.categories.performance.score * 100'
 ```
 
-**TypeScript Strictness**
+#### TypeScript Strictness
+
 ```
 > /autoresearch:plan Eliminate all any types
 
@@ -340,7 +355,8 @@ Launch now? → [Unlimited] [Bounded] [Copy only]
   Verify: grep -r ":\s*any" src/ --include="*.ts" --include="*.tsx" | wc -l | tr -d ' '
 ```
 
-**Python ML Training**
+#### Python ML Training
+
 ```
 > /autoresearch:plan Reduce validation loss
 
@@ -357,7 +373,8 @@ Launch now? → [Unlimited] [Bounded] [Copy only]
   Verify: uv run train.py --epochs 1 2>&1 | grep "val_bpb" | tail -1 | awk '{print $NF}'
 ```
 
-**Content SEO Scoring**
+#### Content SEO Scoring
+
 ```
 > /autoresearch:plan Improve blog SEO scores
 
@@ -374,7 +391,8 @@ Launch now? → [Unlimited] [Bounded] [Copy only]
   Verify: node scripts/seo-score.js content/blog/ | grep "average" | awk '{print $2}'
 ```
 
-**Docker Image Size**
+#### Docker Image Size
+
 ```
 > /autoresearch:plan Reduce Docker image size
 
@@ -394,7 +412,7 @@ Launch now? → [Unlimited] [Bounded] [Copy only]
 ### When to Use Plan
 
 | Situation | Use |
-|-----------|-----|
+| ----------- | ----- |
 | First time using autoresearch | `/autoresearch:plan` — learn the format |
 | Unsure what metric to use | `/autoresearch:plan` — it suggests options |
 | Want to validate before a long run | `/autoresearch:plan` — dry-run confirms it works |
@@ -411,13 +429,15 @@ By default, autoresearch loops **forever** until manually interrupted. Starting 
 
 ### Loop Usage
 
-**Unlimited (default) — loop forever:**
+#### Unlimited (default) — loop forever
+
 ```
 /autoresearch
 Goal: Increase test coverage to 90%
 ```
 
-**Bounded — run exactly N iterations:**
+#### Bounded — run exactly N iterations
+
 ```
 /loop 25 /autoresearch
 Goal: Increase test coverage to 90%
@@ -428,7 +448,7 @@ This chains `/autoresearch` with `/loop 25`, running exactly 25 iteration cycles
 ### When to Use Bounded Loops
 
 | Scenario | Recommendation |
-|----------|---------------|
+| ---------- | --------------- |
 | Run overnight, review in morning | Unlimited (default) |
 | Quick 30-min improvement session | `/loop 10 /autoresearch` |
 | Targeted fix with known scope | `/loop 5 /autoresearch` |
@@ -438,6 +458,7 @@ This chains `/autoresearch` with `/loop 25`, running exactly 25 iteration cycles
 ### Behavior with Loop Count
 
 When a loop count is specified:
+
 - Claude runs exactly **N iterations** through the autoresearch loop
 - After iteration N, Claude prints a **final summary** with baseline → current best, keeps/discards/crashes
 - If the goal is achieved before N iterations, Claude prints **early completion** and stops
@@ -462,7 +483,7 @@ Best iteration: #18 — add tests for payment processing edge cases
 Before looping, Claude performs a one-time setup:
 
 | Step | What Happens |
-|------|-------------|
+| ------ | ------------- |
 | 1. Read context | Reads all in-scope files for full understanding |
 | 2. Define goal | Extracts or asks for a mechanical metric |
 | 3. Define scope | Identifies which files can be modified vs read-only |
@@ -539,7 +560,8 @@ Last 5: keep, discard, discard, keep, keep
 
 ### Software Engineering
 
-**Increase test coverage**
+#### Increase test coverage
+
 ```
 /autoresearch
 Goal: Increase test coverage from 72% to 90%
@@ -549,6 +571,7 @@ Verify: npm test -- --coverage | grep "All files"
 ```
 
 Bounded variant — run 20 iterations then stop:
+
 ```
 /loop 20 /autoresearch
 Goal: Increase test coverage from 72% to 90%
@@ -556,9 +579,11 @@ Scope: src/**/*.test.ts, src/**/*.ts
 Metric: coverage % (higher is better)
 Verify: npm test -- --coverage | grep "All files"
 ```
+
 Claude adds tests one-by-one. Each iteration: write test → run coverage → keep if % increased → discard if not → repeat.
 
-**Reduce bundle size**
+#### Reduce bundle size
+
 ```
 /loop 15 /autoresearch
 Goal: Reduce production bundle size
@@ -566,9 +591,11 @@ Scope: src/**/*.tsx, src/**/*.ts
 Metric: bundle size in KB (lower is better)
 Verify: npm run build 2>&1 | grep "First Load JS"
 ```
+
 Claude tries: tree-shaking unused imports, lazy-loading routes, replacing heavy libraries, code-splitting — one change at a time. 15 iterations is usually enough to find the big wins.
 
-**Fix flaky tests**
+#### Fix flaky tests
+
 ```
 /loop 10 /autoresearch
 Goal: Zero flaky tests (all tests pass 5 consecutive runs)
@@ -577,7 +604,8 @@ Metric: failure count across 5 runs (lower is better)
 Verify: for i in {1..5}; do npm test 2>&1; done | grep -c "FAIL"
 ```
 
-**Performance optimization**
+#### Performance optimization
+
 ```
 /autoresearch
 Goal: API response time under 100ms (p95)
@@ -587,6 +615,7 @@ Verify: npm run bench:api | grep "p95"
 ```
 
 Bounded — quick 30-minute session:
+
 ```
 /loop 10 /autoresearch
 Goal: API response time under 100ms (p95)
@@ -595,7 +624,8 @@ Metric: p95 response time in ms (lower is better)
 Verify: npm run bench:api | grep "p95"
 ```
 
-**Eliminate TypeScript `any` types**
+#### Eliminate TypeScript `any` types
+
 ```
 /loop 25 /autoresearch
 Goal: Eliminate all TypeScript `any` types
@@ -604,7 +634,8 @@ Metric: count of `any` occurrences (lower is better)
 Verify: grep -r ":\s*any" src/ --include="*.ts" | wc -l
 ```
 
-**Reduce lines of code**
+#### Reduce lines of code
+
 ```
 /loop 20 /autoresearch
 Goal: Reduce lines of code in src/services/ by 30% while keeping all tests green
@@ -616,7 +647,8 @@ Verify: npm test && find src/services -name "*.ts" | xargs wc -l | tail -1
 
 ### Sales
 
-**Cold email optimization**
+#### Cold email optimization
+
 ```
 /loop 15 /autoresearch
 Goal: Improve cold email reply rate prediction score
@@ -624,9 +656,11 @@ Scope: content/email-templates/*.md
 Metric: readability score + personalization token count (higher is better)
 Verify: node scripts/score-email-template.js
 ```
+
 Claude iterates on subject lines, opening hooks, CTAs, personalization variables — keeping changes that score higher. 15 iterations for a focused session.
 
-**Sales deck refinement**
+#### Sales deck refinement
+
 ```
 /loop 10 /autoresearch
 Goal: Reduce slide count while maintaining all key points
@@ -635,7 +669,8 @@ Metric: slide count (lower is better), constraint: key-points-checklist.md must 
 Verify: node scripts/check-deck-coverage.js && wc -l content/sales-deck/*.md
 ```
 
-**Objection handling docs**
+#### Objection handling docs
+
 ```
 /loop 20 /autoresearch
 Goal: Cover all 20 common objections with responses under 50 words each
@@ -648,7 +683,8 @@ Verify: node scripts/score-objections.js
 
 ### Marketing
 
-**SEO content optimization**
+#### SEO content optimization
+
 ```
 /autoresearch
 Goal: Maximize SEO score for target keywords
@@ -656,13 +692,16 @@ Scope: content/blog/*.md
 Metric: SEO score from audit tool (higher is better)
 Verify: node scripts/seo-score.js --file content/blog/target-post.md
 ```
+
 Claude tweaks headings, keyword density, meta descriptions, internal links — one change per iteration. Run unlimited overnight, or bounded:
+
 ```
 /loop 25 /autoresearch
 Goal: Maximize SEO score for target keywords
 ```
 
-**Landing page copy**
+#### Landing page copy
+
 ```
 /loop 15 /autoresearch
 Goal: Maximize Flesch readability + keyword density for "AI automation"
@@ -671,7 +710,8 @@ Metric: readability_score * 0.7 + keyword_density_score * 0.3 (higher is better)
 Verify: node scripts/content-score.js content/landing-pages/ai-automation.md
 ```
 
-**Email sequence optimization**
+#### Email sequence optimization
+
 ```
 /loop 20 /autoresearch
 Goal: Optimize 7-day nurture sequence for clarity and CTA strength
@@ -680,7 +720,8 @@ Metric: avg readability + CTA score per email (higher is better)
 Verify: node scripts/score-email-sequence.js onboarding
 ```
 
-**Ad copy variants**
+#### Ad copy variants
+
 ```
 /loop 25 /autoresearch
 Goal: Generate and refine 20 ad copy variants, each under 90 chars with power words
@@ -693,7 +734,8 @@ Verify: node scripts/validate-ad-copy.js
 
 ### HR & People Ops
 
-**Job description optimization**
+#### Job description optimization
+
 ```
 /loop 15 /autoresearch
 Goal: Improve job descriptions — bias-free language, clear requirements, inclusive tone
@@ -702,7 +744,8 @@ Metric: inclusivity score from textio-style checker (higher is better)
 Verify: node scripts/jd-inclusivity-score.js
 ```
 
-**Policy document clarity**
+#### Policy document clarity
+
 ```
 /loop 10 /autoresearch
 Goal: Reduce average reading level of HR policies to grade 8
@@ -711,7 +754,8 @@ Metric: Flesch-Kincaid grade level (lower is better)
 Verify: node scripts/readability.js content/policies/
 ```
 
-**Interview question bank**
+#### Interview question bank
+
 ```
 /loop 20 /autoresearch
 Goal: Ensure all questions are behavioral (STAR format) + cover all competencies
@@ -724,7 +768,8 @@ Verify: node scripts/interview-quality.js
 
 ### Operations
 
-**Runbook optimization**
+#### Runbook optimization
+
 ```
 /loop 15 /autoresearch
 Goal: Reduce average runbook steps while maintaining completeness
@@ -733,7 +778,8 @@ Metric: avg steps per runbook (lower is better), constraint: all checklist items
 Verify: node scripts/runbook-audit.js
 ```
 
-**Process documentation**
+#### Process documentation
+
 ```
 /loop 10 /autoresearch
 Goal: Standardize all SOPs to template format with <100 words per step
@@ -742,7 +788,8 @@ Metric: template compliance % + avg words per step (higher compliance + lower wo
 Verify: node scripts/sop-score.js
 ```
 
-**Incident response playbooks**
+#### Incident response playbooks
+
 ```
 /loop 20 /autoresearch
 Goal: Ensure all playbooks have decision trees, escalation paths, rollback steps
@@ -755,7 +802,8 @@ Verify: node scripts/playbook-completeness.js
 
 ### Performance Marketing
 
-**Google Ads copy optimization**
+#### Google Ads copy optimization
+
 ```
 /loop 30 /autoresearch
 Goal: Generate 50 ad headline variants (max 30 chars) with power words + CTA
@@ -763,9 +811,11 @@ Scope: content/ads/google-search/*.md
 Metric: headlines meeting char limit + power word + CTA criteria (higher is better)
 Verify: node scripts/google-ads-validator.js --type headlines
 ```
+
 Claude generates headline variants, scores each for character limits, emotional triggers, and CTA presence — discarding any that don't meet criteria. 30 iterations to build up 50 variants.
 
-**Landing page CRO (Conversion Rate Optimization)**
+#### Landing page CRO (Conversion Rate Optimization)
+
 ```
 /loop 15 /autoresearch
 Goal: Maximize landing page quality score — clear CTA, social proof, urgency, mobile-friendly structure
@@ -774,7 +824,8 @@ Metric: CRO checklist score (higher is better)
 Verify: node scripts/cro-score.js content/landing-pages/product-launch.md
 ```
 
-**Meta/Facebook ad copy variants**
+#### Meta/Facebook ad copy variants
+
 ```
 /loop 25 /autoresearch
 Goal: Create 30 primary text variants (max 125 chars) optimized for engagement
@@ -783,7 +834,8 @@ Metric: variants meeting criteria + avg engagement score (higher is better)
 Verify: node scripts/meta-ad-validator.js
 ```
 
-**A/B test hypothesis generation**
+#### A/B test hypothesis generation
+
 ```
 /loop 20 /autoresearch
 Goal: Generate 20 testable hypotheses for checkout page, each with metric + expected lift
@@ -792,7 +844,8 @@ Metric: valid hypotheses with metric + lift prediction (higher is better)
 Verify: node scripts/hypothesis-validator.js
 ```
 
-**UTM campaign taxonomy**
+#### UTM campaign taxonomy
+
 ```
 /loop 10 /autoresearch
 Goal: Standardize all campaign URLs with consistent UTM parameters
@@ -801,7 +854,8 @@ Metric: UTM compliance % (higher is better)
 Verify: node scripts/utm-validator.js
 ```
 
-**Email subject line A/B testing**
+#### Email subject line A/B testing
+
 ```
 /loop 30 /autoresearch
 Goal: Generate 40 subject lines for product launch — max 50 chars, personalization token, urgency
@@ -814,7 +868,8 @@ Verify: node scripts/subject-line-scorer.js
 
 ### Data Science & Analytics
 
-**Data pipeline quality**
+#### Data pipeline quality
+
 ```
 /loop 20 /autoresearch
 Goal: Increase data validation pass rate from 85% to 99%
@@ -823,7 +878,8 @@ Metric: validation pass rate % (higher is better)
 Verify: python scripts/run_validations.py | grep "pass_rate"
 ```
 
-**SQL query optimization**
+#### SQL query optimization
+
 ```
 /loop 15 /autoresearch
 Goal: Reduce total query execution time for dashboard queries
@@ -832,7 +888,8 @@ Metric: total execution time in ms (lower is better)
 Verify: psql -f scripts/bench-queries.sql | grep "total_ms"
 ```
 
-**Report template automation**
+#### Report template automation
+
 ```
 /loop 10 /autoresearch
 Goal: Standardize all weekly reports — consistent sections, KPI coverage, action items
@@ -845,7 +902,8 @@ Verify: node scripts/report-template-audit.js
 
 ### DevOps & Infrastructure
 
-**Dockerfile optimization**
+#### Dockerfile optimization
+
 ```
 /loop 10 /autoresearch
 Goal: Reduce Docker image size and build time
@@ -854,7 +912,8 @@ Metric: image size in MB (lower is better)
 Verify: docker build -t bench . 2>&1 && docker images bench --format "{{.Size}}"
 ```
 
-**CI/CD pipeline speed**
+#### CI/CD pipeline speed
+
 ```
 /loop 15 /autoresearch
 Goal: Reduce CI pipeline duration from 12min to under 5min
@@ -863,7 +922,8 @@ Metric: pipeline duration in seconds (lower is better)
 Verify: node scripts/estimate-ci-time.js
 ```
 
-**Terraform/IaC compliance**
+#### Terraform/IaC compliance
+
 ```
 /loop 20 /autoresearch
 Goal: Pass all tfsec security checks + reduce resource count
@@ -876,7 +936,8 @@ Verify: tfsec . --format json | jq '.results | length'
 
 ### Design & Accessibility
 
-**Accessibility audit**
+#### Accessibility audit
+
 ```
 /loop 25 /autoresearch
 Goal: Reach WCAG 2.1 AA compliance — zero axe violations
@@ -885,7 +946,8 @@ Metric: axe violation count (lower is better)
 Verify: npx playwright test a11y.spec.ts | grep "violations"
 ```
 
-**Design token consistency**
+#### Design token consistency
+
 ```
 /loop 20 /autoresearch
 Goal: Replace all hardcoded colors/spacing with design tokens
@@ -988,7 +1050,7 @@ Verify: Use MCP GitHub tool to fetch issues, compare labels against rules
 ### Recommended MCP Servers for Autoresearch
 
 | MCP Server | Use Case | Metric Source |
-|---|---|---|
+| --- | --- | --- |
 | **PostgreSQL** | Query optimization, data validation | Query execution time, row counts |
 | **GitHub** | Issue triage, PR quality, CI status | Issue counts, check pass rates |
 | **Filesystem** | File organization, cleanup | File counts, directory depth |
@@ -1178,6 +1240,7 @@ Optimize aggressively while a spec prevents metric gaming.
 
 ```
 /autoresearch:spec
+
 # Generates invariants (tests pass, lint clean), behaviors (API contracts), constraints (no new deps)
 
 /autoresearch
@@ -1207,10 +1270,10 @@ console.log(`SCORE: ${score}`);
 process.exit(score > 0 ? 0 : 1);
 ```
 
-**Rules for good verification:**
+### Rules for good verification
 
 | Rule | Why |
-|------|-----|
+| ------ | ----- |
 | Runs in under 10 seconds | Fast = more iterations = more experiments |
 | Outputs a single parseable number | Claude needs to extract the metric mechanically |
 | Exit code 0 = success, non-zero = crash | Clean pass/fail signal |
@@ -1228,7 +1291,7 @@ These 8 principles are extracted from [Karpathy's autoresearch](https://github.c
 Autonomy succeeds through intentional constraint, not despite it.
 
 | Autoresearch | Generalized |
-|---|---|
+| --- | --- |
 | 630-line codebase | Bounded scope that fits agent context |
 | 5-minute time budget | Fixed iteration cost |
 | One metric (val_bpb) | Single mechanical success criterion |
@@ -1238,7 +1301,7 @@ Autonomy succeeds through intentional constraint, not despite it.
 Humans set direction (**what** to improve). Agents execute iterations (**how** to improve it).
 
 | Strategic (Human) | Tactical (Agent) |
-|---|---|
+| --- | --- |
 | "Improve page load speed" | "Lazy-load images, code-split routes" |
 | "Increase test coverage" | "Add tests for uncovered edge cases" |
 | "Refactor auth module" | "Extract middleware, simplify handlers" |
@@ -1254,7 +1317,7 @@ If you can't verify with a command, you can't iterate autonomously.
 ### 4. Verification Must Be Fast
 
 | Fast (enables iteration) | Slow (kills iteration) |
-|---|---|
+| --- | --- |
 | Unit tests (seconds) | Full E2E suite (minutes) |
 | Type check (seconds) | Manual QA (hours) |
 | Lint check (instant) | Code review (async) |
@@ -1286,7 +1349,7 @@ A metric alone can be gamed. A spec defines invariants, behaviors, and constrain
 These rules govern Claude's behavior during the autonomous loop:
 
 | # | Rule | Why |
-|---|------|-----|
+| --- | ------ | ----- |
 | 1 | **Loop until done** | Unbounded: loop until interrupted. Bounded (`/loop N`): loop N times then summarize. |
 | 2 | **Read before write** | Always understand full context before modifying. |
 | 3 | **One change per iteration** | Atomic changes — if it breaks, you know exactly why. |
@@ -1304,7 +1367,7 @@ These rules govern Claude's behavior during the autonomous loop:
 Claude handles failures automatically:
 
 | Failure Type | Response |
-|---|---|
+| --- | --- |
 | Syntax error | Fix immediately, don't count as separate iteration |
 | Runtime error | Attempt fix (max 3 tries), then move on |
 | Resource exhaustion (OOM) | Revert, try smaller variant |
@@ -1366,43 +1429,56 @@ The meta-principle:
 
 ## FAQ
 
-**Q: I don't know what metric or verify command to use. How do I get started?**
+### Q: I don't know what metric or verify command to use. How do I get started?
+
 A: Run `/autoresearch:plan` — the planning wizard analyzes your codebase, suggests metrics based on your tooling, constructs a verify command, and dry-runs it before you launch. It's the easiest way to get started.
 
-**Q: What is `/autoresearch:spec` and when should I use it?**
+### Q: What is `/autoresearch:spec` and when should I use it?
+
 A: It generates a behavioral specification (`autoresearch-spec.md`) that acts as a second verification gate in the loop. Use it when running overnight, optimizing performance, refactoring, or any time you want to prevent the loop from gaming metrics at the expense of correctness. The spec defines invariants (must always be true), behaviors (must be preserved), and constraints (hard limits).
 
-**Q: Does this work with any Claude Code project?**
+### Q: Does this work with any Claude Code project?
+
 A: Yes. Copy the skill to `.claude/skills/autoresearch/` in any project. It works with any language, framework, or domain.
 
-**Q: How do I stop the loop?**
+### Q: How do I stop the loop?
+
 A: Press `Ctrl+C` or close the terminal. Or use `/loop N /autoresearch` to run exactly N iterations and stop automatically. Claude commits before verifying, so your last successful state is always preserved in git.
 
-**Q: How do I run a fixed number of iterations?**
+### Q: How do I run a fixed number of iterations?
+
 A: Use `/loop N /autoresearch` (requires Claude Code v1.0.32+). For example, `/loop 25 /autoresearch` runs exactly 25 iterations then prints a summary and stops. See the "Controlled Iterations" section above.
 
-**Q: What if my verification takes too long?**
+### Q: What if my verification takes too long?
+
 A: Aim for under 10 seconds. Longer verification = fewer experiments = slower progress. Use the fastest check that still catches real problems.
 
-**Q: Can I use this for non-code tasks?**
+### Q: Can I use this for non-code tasks?
+
 A: Absolutely. Sales emails, marketing copy, HR policies, runbooks — anything with a measurable metric. See the examples above.
 
-**Q: What happens if Claude gets stuck?**
+### Q: What happens if Claude gets stuck?
+
 A: After 5+ consecutive discards, Claude automatically: re-reads all files, reviews the results log for patterns, tries combining near-misses, attempts the opposite of what hasn't been working, and tries radical changes.
 
-**Q: Is the results log committed to git?**
+### Q: Is the results log committed to git?
+
 A: No. Add `autoresearch-results.tsv` to `.gitignore`. It's a working file for the agent, not part of your codebase.
 
-**Q: Can I review what Claude did?**
+### Q: Can I review what Claude did?
+
 A: Yes. Every kept change is a git commit with a descriptive message. Run `git log --oneline` to see the full history of experiments.
 
-**Q: Can I use MCP servers with autoresearch?**
+### Q: Can I use MCP servers with autoresearch?
+
 A: Yes. Any MCP server configured in your Claude Code environment is available during the loop. Claude can query databases, call APIs, fetch analytics, and interact with external services as part of the verification step. See the "Combining with MCP Servers" section above.
 
-**Q: Can I use an LLM API call as the verification metric?**
+### Q: Can I use an LLM API call as the verification metric?
+
 A: Yes, but carefully. Use a fast, cheap model (like Haiku) for scoring. The verification must be deterministic-ish — same content should score similarly. Avoid using the same model that's making the changes to score them (confirmation bias). See the API patterns section for examples.
 
-**Q: What about rate limits when using APIs for verification?**
+### Q: What about rate limits when using APIs for verification?
+
 A: Add a small delay in your verification script if needed. The loop is still fast — even with a 2-second API call, you get 1,800 iterations per hour. Most API rate limits won't be hit at this pace.
 
 ---
@@ -1412,6 +1488,7 @@ A: Add a small delay in your verification script if needed. The loop is still fa
 Contributions welcome! Open an issue or PR.
 
 Areas of interest:
+
 - New domain examples (data science, design, DevOps, etc.)
 - Better verification script templates
 - Integration with CI/CD pipelines

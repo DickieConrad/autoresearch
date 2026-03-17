@@ -13,7 +13,7 @@ Inspired by [Karpathy's autoresearch](https://github.com/karpathy/autoresearch).
 ## Subcommands
 
 | Subcommand | Purpose |
-|------------|---------|
+| ---------- | ------- |
 | `/autoresearch` | Run the autonomous loop (default) |
 | `/autoresearch:plan` | Interactive wizard to build Scope, Metric, Direction & Verify from a Goal |
 | `/autoresearch:spec` | Generate a behavioral spec — invariants, behaviors, and constraints that must hold across all iterations |
@@ -35,11 +35,13 @@ Load: `references/plan-workflow.md` for full protocol.
 7. **Confirm & Launch** — present the complete config, offer to launch immediately
 
 **Critical gates:**
+
 - Metric MUST be mechanical (outputs a parseable number, not subjective)
 - Verify command MUST pass a dry run on the current codebase before accepting
 - Scope MUST resolve to ≥1 file
 
 **Usage:**
+
 ```
 /autoresearch:plan
 Goal: Make the API respond faster
@@ -66,17 +68,20 @@ Load: `references/spec-driven-workflow.md` for full protocol.
 5. **Commit** — version-control the spec
 
 **Spec sections:**
+
 - **Invariants** — must ALWAYS be true (tests pass, build succeeds, lint clean)
 - **Behaviors** — observable behaviors to preserve (extracted from test suite)
 - **Constraints** — hard limits (no new deps, bundle size cap, API surface unchanged)
 
 **How it works in the loop:**
+
 - After metric verification, spec checks run as a second gate
 - Metric improved + spec passes → keep
 - Metric improved + spec fails → discard (metric gaming detected)
 - Tiered validation: invariants every iteration, behaviors every 5th, constraints every 10th
 
 **Usage:**
+
 ```
 /autoresearch:spec
 # Generates spec from current codebase
@@ -108,12 +113,14 @@ By default, autoresearch loops **forever** until manually interrupted. However, 
 ### Usage
 
 **Unlimited (default):**
+
 ```
 /autoresearch
 Goal: Increase test coverage to 90%
 ```
 
 **Bounded (N iterations):**
+
 ```
 /loop 25 /autoresearch
 Goal: Increase test coverage to 90%
@@ -124,7 +131,7 @@ This chains `/autoresearch` with `/loop 25`, running exactly 25 iteration cycles
 ### When to Use Bounded Loops
 
 | Scenario | Recommendation |
-|----------|---------------|
+| -------- | -------------- |
 | Run overnight, review in morning | Unlimited (default) |
 | Quick 30-min improvement session | `/loop 10 /autoresearch` |
 | Targeted fix with known scope | `/loop 5 /autoresearch` |
@@ -134,6 +141,7 @@ This chains `/autoresearch` with `/loop 25`, running exactly 25 iteration cycles
 ### Behavior with Loop Count
 
 When a loop count is specified:
+
 - Claude runs exactly N iterations through the autoresearch loop
 - After iteration N, Claude prints a **final summary** with baseline → current best, keeps/discards/crashes
 - If the goal is achieved before N iterations, Claude prints early completion and stops
@@ -195,7 +203,7 @@ See `references/core-principles.md` for the 8 generalizable principles from auto
 ## Adapting to Different Domains
 
 | Domain | Metric | Scope | Verify Command |
-|--------|--------|-------|----------------|
+| ------ | ------ | ----- | -------------- |
 | Backend code | Tests pass + coverage % | `src/**/*.ts` | `npm test` |
 | Frontend UI | Lighthouse score | `src/components/**` | `npx lighthouse` |
 | ML training | val_bpb / loss | `train.py` | `uv run train.py` |

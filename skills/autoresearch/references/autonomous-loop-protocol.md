@@ -37,6 +37,7 @@ Pick the NEXT change. Priority order:
 6. **Radical experiments** — when incremental changes stall, try something dramatically different
 
 **Anti-patterns:**
+
 - Don't repeat exact same change that was already discarded
 - Don't make multiple unrelated changes at once (can't attribute improvement)
 - Don't chase marginal gains with ugly complexity
@@ -145,6 +146,7 @@ ELSE:
 ```
 
 **Final summary format:**
+
 ```
 === Autoresearch Complete (N/N iterations) ===
 Baseline: {baseline} → Final: {current} ({delta})
@@ -155,6 +157,7 @@ Best iteration: #{n} — {description}
 ### When Stuck (>5 consecutive discards)
 
 Applies to both modes:
+
 1. Re-read ALL in-scope files from scratch
 2. Re-read the original goal/direction
 3. Review entire results log for patterns

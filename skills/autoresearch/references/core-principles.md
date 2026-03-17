@@ -7,7 +7,7 @@
 Autonomy succeeds through intentional constraint, not despite it.
 
 | Autoresearch | Generalized |
-|--------------|-------------|
+| ------------ | ----------- |
 | 630-line codebase | Bounded scope that fits agent context |
 | 5-minute time budget | Fixed iteration cost |
 | One metric (val_bpb) | Single mechanical success criterion |
@@ -21,7 +21,7 @@ Autonomy succeeds through intentional constraint, not despite it.
 Humans set direction. Agents execute iterations.
 
 | Strategic (Human) | Tactical (Agent) |
-|-------------------|------------------|
+| ----------------- | ---------------- |
 | "Improve page load speed" | "Lazy-load images, code-split routes" |
 | "Increase test coverage" | "Add tests for uncovered edge cases" |
 | "Refactor auth module" | "Extract middleware, simplify handlers" |
@@ -50,7 +50,7 @@ If you can't verify with a command, you can't iterate autonomously.
 If verification takes longer than the work itself, incentives misalign.
 
 | Fast (enables iteration) | Slow (kills iteration) |
-|-------------------------|----------------------|
+| ------------------------ | ---------------------- |
 | Unit tests (seconds) | Full E2E suite (minutes) |
 | Type check (seconds) | Manual QA (hours) |
 | Lint check (instant) | Code review (async) |
@@ -70,6 +70,7 @@ Software: 10-second test → 360 experiments/hour.
 ## 6. Git as Memory and Audit Trail
 
 Every successful change is committed. This enables:
+
 - **Causality tracking** — which change drove improvement?
 - **Stacking wins** — each commit builds on prior successes
 - **Pattern learning** — agent sees what worked in THIS codebase
@@ -90,7 +91,7 @@ Autoresearch CANNOT: change tokenizer, replace human direction, guarantee meanin
 A metric alone can be gamed. A spec defines what must remain true.
 
 | Without Spec | With Spec |
-|---|---|
+| ------------ | --------- |
 | Coverage rises via trivial assertions | Spec requires existing behaviors preserved |
 | Bundle shrinks by removing features | Spec locks public API surface |
 | Response time drops by skipping validation | Spec enforces security invariants |

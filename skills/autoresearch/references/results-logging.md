@@ -13,7 +13,7 @@ iteration	commit	metric	delta	status	spec_status	description
 ### Columns
 
 | Column | Type | Description |
-|--------|------|-------------|
+| ------ | ---- | ----------- |
 | iteration | int | Sequential counter starting at 0 (baseline) |
 | commit | string | Short git hash (7 chars), "-" if reverted |
 | metric | float | Measured value from verification |
@@ -57,10 +57,12 @@ Last 5: keep, discard, discard, keep, keep
 ## Metric Direction
 
 Clarify at setup whether lower or higher is better:
+
 - **Lower is better:** val_bpb, response time (ms), bundle size (KB), error count
 - **Higher is better:** test coverage (%), lighthouse score, throughput (req/s)
 
 Record direction in first line of results log as a comment:
+
 ```
 # metric_direction: higher_is_better
 ```
